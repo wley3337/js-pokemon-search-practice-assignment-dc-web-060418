@@ -1,55 +1,68 @@
 document.addEventListener("DOMContentLoaded", function() {
+
 const searchBarInput = document.getElementById('pokemon-search-input');
 
-
-
-
-
-
-searchBarInput.addEventListener('keydown', liveSearch);
+searchBarInput.addEventListener('keyup', liveSearch);
 })
 
-let searchString = '';
+class Pokemon{
+
+  constructor(name, frontImage, rearImage){
+    this.name = name;
+    this.frontImage = frontImage;
+    this.rearImage = rearImage;
+  };
+
+  render(){ return `
+        <div class="pokemon-frame">
+            <h1 class="center-text">${this.name}</h1>
+            <div style="width:239px;margin:auto">
+              <div style="width:96px;margin:auto">
+                <img src="${this.frontImage}">
+              </div>
+            </div>
+            <p style="padding:10px;" class="center-text flip-image" data-pokename="${this.name}" data-action="flip-image">flip card</p>
+          </div>
+            `
+  }
+
+  flip(event){
+    let source = event.target.parentElement.querySelector('img').src;
+    event.target.parentElement.querySelector('img').src = source === `${this.frontImage}` ? `${this.rearImage}` : `${this.frontImage}`;
+  }
+
+
+}
 
 function pokemonSearch(string){
-
   const pokemonSearchResults = []
-// this gets pokemon that match current searchString
+
   data["pokemons"].forEach(function(el){
      if(el.name.includes(string)){
-       pokemonSearchResults.push(el);
+       const pokemon = new Pokemon (el.name, el.sprites.front, el.sprites.back);
+       pokemonSearchResults.push(pokemon);
      }
   });
   return pokemonSearchResults;
 }
 
 function createAndAddPokemonToParentContainer(pokemonSearchResults){
-  const pokemonParentContainer = document.getElementById('pokemon-container');
+const pokemonParentContainer = document.getElementById('pokemon-container');
+while (pokemonParentContainer.hasChildNodes()) {
+    pokemonParentContainer.removeChild(pokemonParentContainer.lastChild);
+};
   pokemonSearchResults.forEach(function(el){
     const pokemonCard = document.createElement('div')
     pokemonCard.className = 'pokemon-container';
-    pokemonCard.innerHTML = ` <div class="pokemon-frame">
-        <h1 class="center-text">${el.name}</h1>
-        <div style="width:239px;margin:auto">
-          <div style="width:96px;margin:auto">
-            <img src="${el.sprites.front}">
-          </div>
-        </div>
-        <p style="padding:10px;" class="center-text flip-image" data-pokename="${el.name}" data-action="flip-image">flip card</p>
-        </div>`
-        // pokemonParentContainer.childNode.remove()
+    pokemonCard.innerHTML = el.render();
+
       pokemonParentContainer.appendChild(pokemonCard);
+      pokemonCard.querySelector('p').addEventListener('click', el.flip.bind(el))
   });
 }
 
-
-function liveSearch(event){
-
-  if(event.key === "Backspace"){
-    searchString = searchString.slice(0, -1);
-  }else if(event.code.includes('Key')){
-  searchString += event.key.toLowerCase();
-  }
-  let pokemonSearchResults = pokemonSearch(searchString);
+function liveSearch(){
+  const searchBarInput = document.getElementById('pokemon-search-input');
+  let pokemonSearchResults = pokemonSearch(searchBarInput.value);
   createAndAddPokemonToParentContainer(pokemonSearchResults);
 }
